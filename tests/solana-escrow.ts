@@ -10,10 +10,10 @@ describe("solana-escrow", () => {
 
   const program = anchor.workspace.SolanaEscrow as Program<SolanaEscrow>;
 
-  it("Is initialized!", async () => {
+  it("should initialize", async () => {
     const publicKey = anchor.AnchorProvider.local().wallet.publicKey;
     const toWallet: anchor.web3.Keypair = anchor.web3.Keypair.generate();
-    const [escrowPDA] = await anchor.web3.PublicKey.findProgramAddress(
+    const [escrowPDA] = anchor.web3.PublicKey.findProgramAddressSync(
       [
         utf8.encode("escrow"),
         publicKey.toBuffer(),
@@ -21,7 +21,9 @@ describe("solana-escrow", () => {
       ],
       program.programId
     );
+
     console.log("escrowPDA", escrowPDA);
+
     await program.methods
       .createEscrow(new BN(32))
       .accounts({
@@ -31,8 +33,11 @@ describe("solana-escrow", () => {
         escrow: escrowPDA,
       })
       .rpc();
+
     const escrowAccount = await program.account.escrowAccount.fetch(escrowPDA);
+
     console.log(escrowAccount);
+
     assert.equal(escrowAccount.amount.toNumber(), 32);
     assert.isTrue(escrowAccount.from.equals(publicKey));
     assert.isTrue(escrowAccount.to.equals(toWallet.publicKey));
